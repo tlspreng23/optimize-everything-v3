@@ -1,0 +1,113 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Optimize Everything</title>
+  <link rel="icon" type="image/svg+xml" href="favicon.svg">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=DM+Sans:ital,opsz,wght@0,9..40,300;0,9..40,400;0,9..40,500;0,9..40,600;0,9..40,700;1,9..40,400&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="css/style.css">
+  <script src="https://cdn.plot.ly/plotly-2.29.1.min.js" defer></script>
+</head>
+<body>
+<div id="app">
+
+  <!-- Loading overlay -->
+  <div id="loading-overlay" class="hidden">
+    <div class="spinner-wrap">
+      <div class="spinner"></div>
+      <span class="spinner-label" id="loading-label">Loading…</span>
+    </div>
+  </div>
+
+  <!-- Toast -->
+  <div id="toast" class="toast hidden"></div>
+
+  <!-- ── Landing ── -->
+  <div id="landing">
+    <div class="landing-hero">
+      <div class="landing-eyebrow">AI-Guided Bayesian Optimisation</div>
+      <h1 class="landing-title">
+        <img src="logo.svg" alt="Optimize Everything" class="landing-logo">
+      </h1>
+      <p class="landing-sub">From research question to published results — guided by AI.</p>
+      <div class="landing-actions">
+        <button class="btn-primary btn-large" id="btn-new-project">Start New Project</button>
+      </div>
+      <div class="landing-load">
+        <span class="landing-load-label">or load existing project</span>
+        <div class="landing-load-row">
+          <input type="text" id="load-project-id" placeholder="Paste project ID…" class="input-base">
+          <button class="btn-secondary" id="btn-load-project">Load</button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ── Project Page ── -->
+  <div id="project-page" class="hidden">
+
+    <!-- Header with banner background -->
+    <header id="app-header">
+      <div class="header-logo" id="header-logo-btn">
+        <img src="Optimize Everything.svg" alt="Optimize Everything" class="header-logo-img">
+      </div>
+      <div class="header-center">
+        <span id="project-name-display" class="header-project-name"></span>
+      </div>
+      <div class="header-actions">
+        <button class="btn-header" id="btn-share">
+          Share
+          <svg viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path d="M7 17L17 7M17 7H7M17 7V17" stroke-linecap="round" stroke-linejoin="round"/></svg>
+        </button>
+        <button class="btn-header" id="btn-new">New Project</button>
+      </div>
+    </header>
+
+    <!-- Body: sidebar + content -->
+    <div class="app-body">
+      <!-- Sidebar navigation -->
+      <nav id="page-nav">
+        <button class="page-btn active" data-page="discovery">
+          <span class="page-num">1</span>
+          <span class="page-label">Discover</span>
+        </button>
+        <button class="page-btn" data-page="architecture">
+          <span class="page-num">2</span>
+          <span class="page-label">Design</span>
+        </button>
+        <button class="page-btn" data-page="optimise">
+          <span class="page-num">3</span>
+          <span class="page-label">Optimise</span>
+        </button>
+        <button class="page-btn" data-page="analysis">
+          <span class="page-num">4</span>
+          <span class="page-label">Analyse</span>
+        </button>
+        <button class="page-btn" data-page="paper">
+          <span class="page-num">5</span>
+          <span class="page-label">Paper</span>
+        </button>
+      </nav>
+
+      <!-- Content -->
+      <main id="content"></main>
+    </div>
+
+  </div>
+
+</div>
+
+<script src="js/config.js"></script>
+<script src="js/api.js"></script>
+<script src="js/charts.js"></script>
+<script src="js/discovery.js"></script>
+<script src="js/architecture.js"></script>
+<script src="js/optimise.js"></script>
+<script src="js/analysis.js"></script>
+<script src="js/paper.js"></script>
+<script src="js/app.js"></script>
+</body>
+</html>
