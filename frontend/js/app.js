@@ -27,18 +27,41 @@ document.addEventListener('DOMContentLoaded', () => {
 
 /* ── Landing ── */
 function bindLanding() {
-  document.getElementById('btn-new-project').addEventListener('click', async () => {
-    const name = prompt('Project name (leave blank for a default):') ?? '';
+  const nameInput = document.getElementById('project-name-input');
+  const startBtn  = document.getElementById('btn-new-project');
+
+  const startProject = async () => {
+    const name = nameInput?.value.trim() || 'Untitled Project';
     await withLoading(async () => {
-      const proj = await createProject(name.trim() || 'Untitled Project');
+      const proj = await createProject(name);
       applyProject(proj);
       showProjectPage();
     });
+  };
+
+  startBtn.addEventListener('click', startProject);
+  nameInput?.addEventListener('keydown', e => {
+    if (e.key === 'Enter') startProject();
+  });
+
+  // Load existing project — open dialog
+  const loadDialog = document.getElementById('load-dialog');
+  document.getElementById('btn-load-existing')?.addEventListener('click', e => {
+    e.preventDefault();
+    loadDialog?.classList.remove('hidden');
+    document.getElementById('load-project-id')?.focus();
+  });
+  document.getElementById('btn-load-cancel')?.addEventListener('click', () => {
+    loadDialog?.classList.add('hidden');
+  });
+  loadDialog?.addEventListener('click', e => {
+    if (e.target === loadDialog) loadDialog.classList.add('hidden');
   });
 
   document.getElementById('btn-load-project').addEventListener('click', () => {
     const id = document.getElementById('load-project-id').value.trim();
     if (!id) return toast('Paste a project ID first.', 'warn');
+    loadDialog?.classList.add('hidden');
     loadProject(id);
   });
 
@@ -143,7 +166,10 @@ function showLanding() {
   document.getElementById('project-page').classList.add('hidden');
   document.getElementById('landing').classList.remove('hidden');
   state.projectId = null; state.project = null; state.initBatch = null;
+  const nameInput = document.getElementById('project-name-input');
+  if (nameInput) nameInput.value = '';
   document.getElementById('load-project-id').value = '';
+  document.getElementById('load-dialog')?.classList.add('hidden');
   const url = new URL(window.location.href);
   url.searchParams.delete('p');
   history.replaceState(null, '', url.toString());

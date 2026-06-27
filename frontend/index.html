@@ -28,19 +28,28 @@
   <!-- ── Landing ── -->
   <div id="landing">
     <div class="landing-hero">
-      <div class="landing-eyebrow">AI-Guided Bayesian Optimisation</div>
-      <h1 class="landing-title">
-        <img src="logo.svg" alt="Optimize Everything" class="landing-logo">
-      </h1>
-      <p class="landing-sub">From research question to published results — guided by AI.</p>
-      <div class="landing-actions">
-        <button class="btn-primary btn-large" id="btn-new-project">Start New Project</button>
+      <img src="Optimize Everything.svg" alt="Optimize Everything" class="landing-logo">
+      <h2 class="landing-prompt">What do you want to optimize today?</h2>
+      <div class="landing-input-wrap">
+        <input type="text" id="project-name-input" class="landing-input" placeholder="Enter your project name…" autofocus>
       </div>
-      <div class="landing-load">
-        <span class="landing-load-label">or load existing project</span>
-        <div class="landing-load-row">
-          <input type="text" id="load-project-id" placeholder="Paste project ID…" class="input-base">
-          <button class="btn-secondary" id="btn-load-project">Load</button>
+      <button class="landing-start-btn" id="btn-new-project">
+        Start
+        <svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12h14M12 5l7 7-7 7"/></svg>
+      </button>
+    </div>
+    <div class="landing-footer">
+      <a href="#" class="landing-load-link" id="btn-load-existing">Load existing project</a>
+    </div>
+    <!-- Hidden load dialog -->
+    <div id="load-dialog" class="load-dialog hidden">
+      <div class="load-dialog-box">
+        <h3 class="load-dialog-title">Load Project</h3>
+        <p class="load-dialog-desc">Enter your project ID to continue where you left off.</p>
+        <input type="text" id="load-project-id" class="landing-input" placeholder="Paste project ID…">
+        <div class="load-dialog-actions">
+          <button class="btn-primary" id="btn-load-project">Load</button>
+          <button class="btn-link" id="btn-load-cancel" style="color:rgba(255,255,255,0.6);">Cancel</button>
         </div>
       </div>
     </div>
