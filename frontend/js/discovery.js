@@ -3,11 +3,26 @@
    Page 1: Literature research & avenue selection
    ================================================================ */
 
+/* ── Skeleton placeholder text ── */
+const _SKELETON_SUMMARY = [
+  'Analysing the current state of research in this domain, including recent advances and key challenges faced by the scientific community.',
+  'Identifying the most promising methodologies, evaluating their effectiveness across different experimental conditions, and reviewing quantitative benchmarks reported in recent literature.',
+  'Considering practical constraints such as scalability, cost-effectiveness, reproducibility, and alignment with both industrial requirements and academic research standards.',
+].join(' ');
+
+const _SKELETON_AVENUES = [
+  { name: 'Approach One', desc: 'Reviewing the first major methodology, including its theoretical basis, experimental validation, and reported performance metrics across different conditions and scales.' },
+  { name: 'Approach Two', desc: 'Evaluating an alternative strategy with distinct advantages in specific scenarios, assessing trade-offs between efficiency, cost, and practical implementation considerations.' },
+  { name: 'Approach Three', desc: 'Exploring emerging techniques that show promise based on recent publications, including novel combinations of established methods and cutting-edge developments in the field.' },
+  { name: 'Approach Four', desc: 'Investigating additional pathways that address specific limitations of conventional approaches, with focus on innovative solutions and interdisciplinary perspectives.' },
+];
+
 function renderDiscoveryPage(container) {
   const p = state.project;
   const report = p.literature_report;
   const hasReport = !!report;
   const selectedAvenue = p.selected_avenue;
+  const isLoading = state._litLoading;
 
   container.innerHTML = `
     <div class="page-content">
@@ -28,16 +43,16 @@ function renderDiscoveryPage(container) {
               class="chat-textarea"
               rows="2"
               placeholder="e.g. design a porous material for post-combustion CO₂ capture that is low-cost and regenerable…"
+              ${isLoading ? 'disabled' : ''}
             >${escHtml(p.topic || '')}</textarea>
-            <button class="btn-primary" id="btn-research" style="flex-shrink:0;">
-              ${hasReport ? 'Refresh' : 'Research'}
+            <button class="btn-primary" id="btn-research" style="flex-shrink:0;" ${isLoading ? 'disabled' : ''}>
+              ${isLoading ? 'Researching…' : hasReport ? 'Refresh' : 'Research'}
             </button>
           </div>
-          ${p.topic ? `<p class="hint" style="margin-top:-20px;margin-bottom:24px;">Press <strong>Research</strong> to regenerate the literature report.</p>` : ''}
         </div>
       </section>
 
-      ${hasReport ? renderLiteratureReport(report, selectedAvenue) : ''}
+      ${(hasReport || isLoading) ? renderLiteratureSection(report, selectedAvenue, isLoading) : ''}
 
       ${hasReport ? renderFollowUpChat(p) : ''}
 
@@ -47,6 +62,47 @@ function renderDiscoveryPage(container) {
   bindDiscovery(container);
 }
 
+function renderLiteratureSection(report, selectedAvenue, isLoading) {
+  if (isLoading) {
+    return renderSkeletonReport();
+  }
+  return renderLiteratureReport(report, selectedAvenue);
+}
+
+/* ── Skeleton loading state ── */
+function renderSkeletonReport() {
+  return `
+    <section class="section lit-report" id="lit-report-section">
+      <div class="section-eyebrow">Literature Review</div>
+      <h2 class="section-title skeleton-text">Research Landscape</h2>
+
+      <div class="lit-summary skeleton-block">
+        <p class="skeleton-text">${_SKELETON_SUMMARY}</p>
+      </div>
+
+      <div class="subsection-label">Approaches &amp; Systems</div>
+      <div class="avenues-grid">
+        ${_SKELETON_AVENUES.map(a => `
+          <div class="avenue-card skeleton-block">
+            <div class="avenue-name skeleton-text">${a.name}</div>
+            <div class="avenue-desc skeleton-text">${a.desc}</div>
+            <div class="avenue-pillars">
+              <div class="avenue-pillar skeleton-text">Evaluating advantages and potential benefits</div>
+              <div class="avenue-pillar skeleton-text">Assessing limitations and practical constraints</div>
+            </div>
+          </div>
+        `).join('')}
+      </div>
+
+      <div class="skeleton-status" id="skeleton-status">
+        <div class="skeleton-status-dot"></div>
+        <span>Searching scientific literature…</span>
+      </div>
+    </section>
+  `;
+}
+
+/* ── Real report ── */
 function renderLiteratureReport(report, selectedAvenue) {
   const avenues = report.avenues || [];
   const openQs  = report.open_questions || [];
@@ -111,11 +167,6 @@ function renderAvenueCard(avenue, isSelected) {
 
 function renderFollowUpChat(p) {
   const history = p.chat_history || [];
-  // Only show follow-up pairs (skip the initial literature exchange if it was stored)
-  const messages = history.filter((_, i) => {
-    // Show all stored messages
-    return true;
-  });
 
   return `
     <section class="section followup-section">
@@ -123,7 +174,7 @@ function renderFollowUpChat(p) {
       <h2 class="section-title" style="font-size:20px;">Ask about these approaches</h2>
 
       <div class="chat-messages" id="chat-messages">
-        ${messages.map(m => renderChatMessage(m)).join('')}
+        ${history.map(m => renderChatMessage(m)).join('')}
       </div>
 
       <div class="chat-input-row" style="margin-bottom:0;">
@@ -149,28 +200,67 @@ function renderChatMessage(msg) {
   `;
 }
 
+/* ── Skeleton status message cycling ── */
+let _skelTimer = null;
+let _skelIndex = 0;
+const _SKEL_STEPS = [
+  'Searching scientific literature…',
+  'Analysing research landscape…',
+  'Identifying key approaches…',
+  'Evaluating methodologies…',
+  'Comparing trade-offs…',
+  'Assessing technology readiness…',
+  'Synthesising findings…',
+  'Structuring report…',
+];
+
+function startSkeletonCycle() {
+  _skelIndex = 0;
+  _skelTimer = setInterval(() => {
+    _skelIndex = (_skelIndex + 1) % _SKEL_STEPS.length;
+    const el = document.querySelector('#skeleton-status span');
+    if (el) {
+      el.style.opacity = '0';
+      setTimeout(() => {
+        el.textContent = _SKEL_STEPS[_skelIndex];
+        el.style.opacity = '1';
+      }, 200);
+    }
+  }, 3000);
+}
+
+function stopSkeletonCycle() {
+  if (_skelTimer) { clearInterval(_skelTimer); _skelTimer = null; }
+}
+
+/* ── Bindings ── */
 function bindDiscovery(container) {
-  // Research button
   const btnResearch = document.getElementById('btn-research');
   const topicInput  = document.getElementById('topic-input');
+
+  // Start skeleton cycle if loading
+  if (state._litLoading) {
+    startSkeletonCycle();
+  }
 
   btnResearch?.addEventListener('click', async () => {
     const topic = topicInput?.value.trim();
     if (!topic) return toast('Describe your research goal first.', 'warn');
-    await withLoading(async () => {
+
+    // Show skeleton inline (no overlay)
+    state._litLoading = true;
+    renderApp();
+
+    try {
       const proj = await generateLiterature(state.projectId, topic);
       applyProject(proj);
+    } catch (err) {
+      toast(err.message || 'Literature research failed.', 'error');
+    } finally {
+      state._litLoading = false;
+      stopSkeletonCycle();
       renderApp();
-    }, 'Searching scientific literature…', [
-      'Searching scientific literature…',
-      'Analysing research landscape…',
-      'Identifying key approaches…',
-      'Evaluating industrial relevance…',
-      'Comparing methodologies…',
-      'Assessing technology readiness…',
-      'Synthesising findings…',
-      'Structuring literature report…',
-    ]);
+    }
   });
 
   topicInput?.addEventListener('keydown', e => {
@@ -178,7 +268,7 @@ function bindDiscovery(container) {
   });
 
   // Avenue card selection
-  container.querySelectorAll('.avenue-card').forEach(card => {
+  container.querySelectorAll('.avenue-card:not(.skeleton-block)').forEach(card => {
     card.addEventListener('click', async () => {
       const avenueId   = card.dataset.avenueId;
       const avenueName = card.dataset.avenueName;
@@ -217,7 +307,6 @@ function bindChat(container) {
   const btnSend   = document.getElementById('btn-chat-send');
   if (!chatInput || !btnSend) return;
 
-  // Auto-resize textarea
   chatInput.addEventListener('input', () => {
     chatInput.style.height = 'auto';
     chatInput.style.height = Math.min(chatInput.scrollHeight, 180) + 'px';
@@ -232,13 +321,11 @@ function bindChat(container) {
     const messagesEl = document.getElementById('chat-messages');
     if (!messagesEl) return;
 
-    // Append user message immediately
     const userDiv = document.createElement('div');
     userDiv.className = 'chat-msg user';
     userDiv.innerHTML = `<div class="chat-bubble">${escHtml(msg)}</div>`;
     messagesEl.appendChild(userDiv);
 
-    // Add typing indicator
     const typingDiv = document.createElement('div');
     typingDiv.className = 'chat-msg assistant';
     typingDiv.innerHTML = `
@@ -250,7 +337,6 @@ function bindChat(container) {
     messagesEl.appendChild(typingDiv);
     messagesEl.scrollTop = messagesEl.scrollHeight;
 
-    // Stream response
     let fullText = '';
     const responseBubble = document.createElement('div');
     responseBubble.className = 'chat-bubble';
@@ -260,7 +346,6 @@ function bindChat(container) {
         state.projectId,
         msg,
         (chunk) => {
-          // Replace typing indicator with actual response on first chunk
           if (!fullText) {
             typingDiv.innerHTML = '';
             typingDiv.appendChild(responseBubble);
@@ -270,9 +355,7 @@ function bindChat(container) {
           messagesEl.scrollTop = messagesEl.scrollHeight;
         },
         () => {
-          // Done — update state with new history (will be reloaded on next full render)
           if (!fullText) typingDiv.remove();
-          // Refresh project state silently to get saved chat_history
           getProject(state.projectId).then(proj => {
             state.project = proj;
           }).catch(() => {});

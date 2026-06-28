@@ -50,37 +50,84 @@ def _strip_fences(text: str) -> str:
     return text.strip()
 
 
+def _repair_json(text: str) -> str:
+    """Attempt to repair truncated JSON by closing open strings, arrays, objects."""
+    # Close any unclosed string
+    in_string = False
+    escape = False
+    for ch in text:
+        if escape:
+            escape = False
+            continue
+        if ch == '\\':
+            escape = True
+            continue
+        if ch == '"':
+            in_string = not in_string
+    if in_string:
+        text += '"'
+
+    # Count open brackets/braces and close them
+    opens = []
+    in_str = False
+    esc = False
+    for ch in text:
+        if esc:
+            esc = False
+            continue
+        if ch == '\\':
+            esc = True
+            continue
+        if ch == '"':
+            in_str = not in_str
+            continue
+        if in_str:
+            continue
+        if ch in '{[':
+            opens.append('}' if ch == '{' else ']')
+        elif ch in '}]' and opens:
+            opens.pop()
+
+    # Remove trailing comma before closing
+    stripped = text.rstrip()
+    if stripped.endswith(','):
+        text = stripped[:-1]
+
+    for closer in reversed(opens):
+        text += closer
+
+    return text
+
+
 def _call_json(
     system: str,
     prompt: str,
     model: str = MODEL_FAST,
     max_tokens: int = 4096,
-    _retries: int = 1,
 ) -> dict:
-    """Call Claude and return parsed JSON. Strips markdown fences if present."""
-    for attempt in range(_retries + 1):
-        cur_tokens = max_tokens if attempt == 0 else int(max_tokens * 1.5)
-        message = _sync().messages.create(
-            model=model,
-            max_tokens=cur_tokens,
-            system=system,
-            messages=[{"role": "user", "content": prompt}],
-        )
-        text = _strip_fences(message.content[0].text)
+    """Call Claude and return parsed JSON. Repairs truncated output if needed."""
+    message = _sync().messages.create(
+        model=model,
+        max_tokens=max_tokens,
+        system=system,
+        messages=[{"role": "user", "content": prompt}],
+    )
+    text = _strip_fences(message.content[0].text)
 
-        # Detect truncation — retry with more tokens
-        if message.stop_reason == "max_tokens" and attempt < _retries:
-            continue
-
-        try:
-            return json.loads(text)
-        except json.JSONDecodeError as exc:
-            if attempt < _retries:
-                continue
-            raise ValueError(
-                f"AI returned invalid JSON (stop_reason={message.stop_reason}). "
-                f"Parse error: {exc}"
-            )
+    try:
+        return json.loads(text)
+    except json.JSONDecodeError:
+        # Try to repair truncated JSON
+        if message.stop_reason == "max_tokens":
+            repaired = _repair_json(text)
+            try:
+                return json.loads(repaired)
+            except json.JSONDecodeError as exc2:
+                raise ValueError(
+                    f"AI response was truncated and could not be repaired. "
+                    f"Parse error: {exc2}"
+                )
+        raise ValueError(f"AI returned invalid JSON. Retry your request.")
 
 
 # ── Literature research ───────────────────────────────────────────────────────
@@ -123,7 +170,7 @@ Provide a structured literature review. Return ONLY valid JSON (no markdown fenc
 
 Provide 3–5 avenues. Keep each field concise. Be specific with numbers where possible."""
 
-    return _call_json(_LITERATURE_SYSTEM, prompt, model=MODEL_FAST, max_tokens=3000, _retries=0)
+    return _call_json(_LITERATURE_SYSTEM, prompt, model=MODEL_FAST, max_tokens=4096)
 
 
 # ── Follow-up chat (streaming) ────────────────────────────────────────────────
@@ -228,7 +275,7 @@ Suggest 4–8 variables with realistic, practically achievable ranges.
 Suggest 1–4 objectives covering the most important performance indicators.
 Consider both industrially relevant and academically standard choices."""
 
-    return _call_json(_DESIGN_SYSTEM, prompt, model=MODEL_FAST, max_tokens=2500, _retries=0)
+    return _call_json(_DESIGN_SYSTEM, prompt, model=MODEL_FAST, max_tokens=3000)
 
 
 # ── Uploaded data analysis ────────────────────────────────────────────────────

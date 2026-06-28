@@ -9,6 +9,8 @@ let state = {
   project:     null,
   currentPage: 'discovery',
   loading:     false,
+  // Discovery page
+  _litLoading: false,
   // Optimise page
   initBatch:   null,
   initMethod:  null,
