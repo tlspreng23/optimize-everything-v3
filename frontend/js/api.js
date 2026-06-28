@@ -11,7 +11,20 @@ async function apiFetch(path, options = {}) {
   };
   if (options.body instanceof FormData) delete merged.headers['Content-Type'];
 
-  const response = await fetch(url, merged);
+  // 120s timeout to catch gateway timeouts before they become opaque errors
+  const controller = new AbortController();
+  const timeoutId = setTimeout(() => controller.abort(), 120000);
+  merged.signal = controller.signal;
+
+  let response;
+  try {
+    response = await fetch(url, merged);
+  } catch (err) {
+    clearTimeout(timeoutId);
+    if (err.name === 'AbortError') throw new Error('Request timed out — the server took too long. Please try again.');
+    throw new Error('Network error — could not reach the server. Check your connection and try again.');
+  }
+  clearTimeout(timeoutId);
 
   if (!response.ok) {
     let errMsg = `API error ${response.status}`;

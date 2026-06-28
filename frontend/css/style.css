@@ -642,23 +642,29 @@ input[type="radio"]    { accent-color: var(--accent); }
 }
 
 .avenues-grid {
-  display: grid; grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
-  gap: 16px; margin-bottom: 28px;
+  display: flex; flex-direction: column;
+  gap: 0; margin-bottom: 28px;
 }
 
 .avenue-card {
-  border: 2px solid var(--border); border-radius: var(--radius);
-  padding: 18px 20px; cursor: pointer; transition: border-color 0.2s, background 0.2s;
+  border-bottom: 1px solid var(--border-light);
+  padding: 24px 4px; cursor: pointer;
+  transition: opacity 0.3s, border-color 0.2s;
   background: transparent; user-select: none;
 }
-.avenue-card:hover { border-color: var(--accent); background: rgba(43,37,142,0.02); }
-.avenue-card.selected { border-color: var(--accent); background: rgba(43,37,142,0.04); }
+.avenue-card:first-child { border-top: 1px solid var(--border-light); }
+.avenue-card:hover { background: rgba(43,37,142,0.02); }
+.avenue-card.selected { border-left: 3px solid var(--accent); padding-left: 20px; }
+
+/* When any card is selected, dim the others */
+.avenues-grid.has-selection .avenue-card:not(.selected) { opacity: 0.35; }
+.avenues-grid.has-selection .avenue-card:not(.selected):hover { opacity: 0.7; }
 
 .avenue-name {
-  font-family: 'DM Sans', sans-serif; font-size: 18px; color: var(--dark);
-  margin-bottom: 6px; font-weight: 600;
+  font-family: 'DM Sans', sans-serif; font-size: 22px; color: var(--dark);
+  margin-bottom: 8px; font-weight: 600; line-height: 1.3;
 }
-.avenue-desc { font-size: 12px; color: var(--grey); line-height: 1.6; margin-bottom: 12px; }
+.avenue-desc { font-size: 14px; color: var(--grey); line-height: 1.6; margin-bottom: 12px; }
 
 .avenue-pillars {
   display: flex; flex-direction: column; gap: 6px; margin-bottom: 12px;

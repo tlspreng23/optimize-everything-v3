@@ -2,12 +2,17 @@ import io
 import csv
 import json
 import uuid
+import logging
+import time
 import numpy as np
 import pandas as pd
 from fastapi import FastAPI, HTTPException, UploadFile, File
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import StreamingResponse
 from typing import List, Dict, Optional
+
+logger = logging.getLogger("api")
+logging.basicConfig(level=logging.INFO)
 
 from models import (
     CreateProjectRequest, UpdateProjectRequest,
@@ -201,10 +206,14 @@ def create_app() -> FastAPI:
     @app.post("/api/projects/{project_id}/literature")
     async def generate_literature(project_id: str, req: LiteratureRequest):
         p = _require(project_id)
+        logger.info(f"Literature research starting for topic: {req.topic[:80]}")
+        t0 = time.time()
         try:
             report = ai.literature_research(req.topic)
         except Exception as exc:
+            logger.error(f"Literature research failed after {time.time()-t0:.1f}s: {type(exc).__name__}: {exc}")
             raise HTTPException(500, f"Literature research failed: {exc}")
+        logger.info(f"Literature research completed in {time.time()-t0:.1f}s")
 
         db.table("projects").update({
             "topic": req.topic,

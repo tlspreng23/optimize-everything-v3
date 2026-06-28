@@ -10,6 +10,12 @@ from typing import AsyncGenerator, Optional
 
 import anthropic
 
+# ── Model config ─────────────────────────────────────────────────────────────
+
+MODEL_FAST = "claude-sonnet-4-6"     # interactive calls (literature, design, chat)
+MODEL_QUALITY = "claude-sonnet-4-6"  # longer tasks (paper generation)
+MODEL_CHEAP = "claude-haiku-4-5-20251001"  # simple analysis tasks
+
 # ── Clients ───────────────────────────────────────────────────────────────────
 
 _sync_client: Optional[anthropic.Anthropic] = None
@@ -36,11 +42,9 @@ def _strip_fences(text: str) -> str:
     """Remove markdown code fences from a JSON response."""
     text = text.strip()
     if text.startswith("```"):
-        # Remove opening fence (```json or ```)
         first_newline = text.find("\n")
         if first_newline != -1:
             text = text[first_newline + 1:]
-        # Remove closing fence
         if text.rstrip().endswith("```"):
             text = text.rstrip()[:-3]
     return text.strip()
@@ -49,8 +53,8 @@ def _strip_fences(text: str) -> str:
 def _call_json(
     system: str,
     prompt: str,
-    model: str = "claude-opus-4-6",
-    max_tokens: int = 2500,
+    model: str = MODEL_FAST,
+    max_tokens: int = 4096,
     _retries: int = 1,
 ) -> dict:
     """Call Claude and return parsed JSON. Strips markdown fences if present."""
@@ -97,34 +101,29 @@ def literature_research(topic: str) -> dict:
     """
     prompt = f"""The researcher wants to: {topic}
 
-Provide a comprehensive, structured literature review. Return ONLY valid JSON (no markdown fences) matching this schema exactly:
+Provide a structured literature review. Return ONLY valid JSON (no markdown fences, no extra text).
 
 {{
-  "field": "Name of the research field",
-  "summary": "2–3 paragraph overview of the current state, key challenges, and major trends in this area",
+  "field": "Research field name",
+  "summary": "1 paragraph (4–6 sentences) overview of the current state and key challenges",
   "avenues": [
     {{
-      "id": "short_unique_id",
-      "name": "Approach / System Name",
-      "description": "What this approach is and how it works (2–3 sentences, scientifically precise)",
-      "pros": ["Specific advantage with quantitative support where possible", "..."],
-      "cons": ["Specific limitation or challenge", "..."],
-      "industrial_relevance": "Current industrial status, commercial players, scalability considerations",
-      "academic_focus": "What metrics and aspects academic publications typically target",
-      "trl": "TRL 1–9 and one-sentence justification",
-      "key_results": "Most notable quantitative results reported in the literature"
+      "id": "short_id",
+      "name": "Approach Name",
+      "description": "1–2 sentence description",
+      "pros": ["advantage 1", "advantage 2"],
+      "cons": ["limitation 1", "limitation 2"],
+      "trl": "TRL level (1-9) with brief justification",
+      "key_results": "Best quantitative results (1 sentence)"
     }}
   ],
-  "open_questions": [
-    "A major unresolved scientific or engineering question",
-    "..."
-  ],
-  "recommendation": "Given the stated goal, which avenue(s) are most promising and why (2–4 sentences)"
+  "open_questions": ["question 1", "question 2", "question 3"],
+  "recommendation": "Which avenue(s) are most promising and why (2 sentences)"
 }}
 
-Provide 3–6 distinct avenues covering the main approaches. Be scientifically accurate and specific with numbers."""
+Provide 3–5 avenues. Keep each field concise. Be specific with numbers where possible."""
 
-    return _call_json(_LITERATURE_SYSTEM, prompt, max_tokens=6000, _retries=1)
+    return _call_json(_LITERATURE_SYSTEM, prompt, model=MODEL_FAST, max_tokens=3000, _retries=0)
 
 
 # ── Follow-up chat (streaming) ────────────────────────────────────────────────
@@ -158,7 +157,7 @@ async def chat_stream(
 
     client = _async()
     async with client.messages.stream(
-        model="claude-opus-4-6",
+        model=MODEL_FAST,
         max_tokens=800,
         system=system,
         messages=messages,
@@ -229,7 +228,7 @@ Suggest 4–8 variables with realistic, practically achievable ranges.
 Suggest 1–4 objectives covering the most important performance indicators.
 Consider both industrially relevant and academically standard choices."""
 
-    return _call_json(_DESIGN_SYSTEM, prompt, max_tokens=2500)
+    return _call_json(_DESIGN_SYSTEM, prompt, model=MODEL_FAST, max_tokens=2500, _retries=0)
 
 
 # ── Uploaded data analysis ────────────────────────────────────────────────────
@@ -260,7 +259,7 @@ Provide a concise (4–6 sentence) analysis covering:
 4. Specific suggestions for how to use this data in the study (e.g. prior data, constraints, benchmarks)"""
 
     message = _sync().messages.create(
-        model="claude-haiku-4-5-20251001",
+        model=MODEL_CHEAP,
         max_tokens=450,
         messages=[{"role": "user", "content": prompt}],
     )
@@ -286,7 +285,7 @@ Use the actual variable and objective names. Write as flowing prose without bull
 Keep the language clear and precise, as for a scientist reviewing optimisation results."""
 
     message = _sync().messages.create(
-        model="claude-haiku-4-5-20251001",
+        model=MODEL_CHEAP,
         max_tokens=400,
         messages=[{"role": "user", "content": prompt}],
     )
@@ -367,4 +366,4 @@ Write a scientific paper summary. Return ONLY valid JSON:
 
 Write in formal scientific English. Be specific about numerical results."""
 
-    return _call_json(_PAPER_SYSTEM, prompt, max_tokens=4000)
+    return _call_json(_PAPER_SYSTEM, prompt, model=MODEL_QUALITY, max_tokens=4096)

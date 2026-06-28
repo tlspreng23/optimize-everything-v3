@@ -32,6 +32,8 @@ image = (
         modal.Secret.from_name("optimize-everything-key"),
     ],
     timeout=300,
+    scaledown_window=300,
+    min_containers=1,
 )
 @modal.concurrent(max_inputs=20)
 @modal.asgi_app()

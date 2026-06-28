@@ -59,7 +59,7 @@ function renderLiteratureReport(report, selectedAvenue) {
       <div class="lit-summary">${formatLitText(report.summary || '')}</div>
 
       <div class="subsection-label">Approaches &amp; Systems</div>
-      <div class="avenues-grid" id="avenues-grid">
+      <div class="avenues-grid${selectedAvenue ? ' has-selection' : ''}" id="avenues-grid">
         ${avenues.map(a => renderAvenueCard(a, a.name === selectedAvenue)).join('')}
       </div>
 
@@ -100,11 +100,11 @@ function renderAvenueCard(avenue, isSelected) {
         ${pros.map(p => `<div class="avenue-pillar avenue-pro">✓ ${escHtml(p)}</div>`).join('')}
         ${cons.map(c => `<div class="avenue-pillar avenue-con">✗ ${escHtml(c)}</div>`).join('')}
       </div>
+      ${(avenue.trl || avenue.key_results) ? `
       <div class="avenue-meta">
         ${avenue.trl ? `<div class="avenue-meta-row"><strong>TRL:</strong> ${escHtml(avenue.trl)}</div>` : ''}
-        ${avenue.industrial_relevance ? `<div class="avenue-meta-row"><strong>Industry:</strong> ${escHtml(avenue.industrial_relevance)}</div>` : ''}
         ${avenue.key_results ? `<div class="avenue-meta-row"><strong>Key results:</strong> ${escHtml(avenue.key_results)}</div>` : ''}
-      </div>
+      </div>` : ''}
     </div>
   `;
 }
