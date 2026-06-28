@@ -224,6 +224,9 @@ a { color: var(--accent); text-decoration: none; }
   background-image: url('../Banner.svg');
   background-size: cover;
   background-position: center;
+  position: sticky;
+  top: 0;
+  z-index: 100;
   display: flex; align-items: center; padding: 0 24px; gap: 16px;
   position: sticky; top: 0; z-index: 100;
   border-bottom: 2px solid var(--border);
@@ -667,26 +670,90 @@ input[type="radio"]    { accent-color: var(--accent); }
 .avenue-desc { font-size: 14px; color: var(--grey); line-height: 1.6; margin-bottom: 12px; }
 
 .avenue-pillars {
-  display: flex; flex-direction: column; gap: 6px; margin-bottom: 12px;
+  display: flex; flex-direction: column; gap: 8px; margin-bottom: 14px;
 }
-.avenue-pillar { font-size: 12px; line-height: 1.5; }
-.avenue-pillar strong { font-weight: 600; }
-.avenue-pro  { color: #15803d; }
-.avenue-con  { color: #9a2020; }
+.avenue-pillar { font-size: 13px; line-height: 1.5; }
+.avenue-pillar-label { font-weight: 700; }
+.avenue-pillar-detail { color: var(--grey); }
+.avenue-pro .avenue-pillar-label { color: #15803d; }
+.avenue-con .avenue-pillar-label { color: #9a2020; }
 
-.avenue-meta {
-  border-top: 1px solid var(--border); padding-top: 10px; margin-top: 8px;
-  display: flex; flex-direction: column; gap: 4px;
+/* TRL slider */
+.trl-slider-wrap {
+  margin: 12px 0 6px; padding-top: 10px;
+  border-top: 1px solid var(--border-light);
 }
-.avenue-meta-row { font-size: 11px; color: var(--grey); line-height: 1.5; }
-.avenue-meta-row strong { color: var(--text); }
+.trl-slider-header {
+  display: flex; align-items: center; justify-content: space-between;
+  margin-bottom: 8px;
+}
+.trl-slider-label {
+  font-size: 10px; font-weight: 600; letter-spacing: 0.12em;
+  text-transform: uppercase; color: var(--grey);
+}
+.trl-slider-value {
+  font-size: 13px; font-weight: 700; color: var(--accent);
+}
+.trl-track {
+  position: relative; height: 6px;
+  background: var(--border-light); border-radius: 3px;
+  margin-bottom: 6px;
+}
+.trl-fill {
+  position: absolute; left: 0; top: 0; height: 100%;
+  background: var(--accent); border-radius: 3px;
+  transition: width 0.4s ease;
+}
+.trl-markers {
+  display: flex; justify-content: space-between;
+  padding: 0 1px;
+}
+.trl-marker {
+  font-size: 9px; color: var(--border-light); font-weight: 500;
+  width: 14px; text-align: center;
+}
+.trl-marker.active { color: var(--accent); font-weight: 700; }
+.trl-justification {
+  font-size: 11px; color: var(--grey); line-height: 1.5;
+  margin-top: 6px;
+}
 
-.trl-badge {
-  display: inline-block; font-family: 'DM Sans', sans-serif; font-size: 9px;
-  font-weight: 600; letter-spacing: 0.1em; text-transform: uppercase;
-  background: transparent; border: 1px solid var(--border);
-  border-radius: var(--radius); padding: 2px 7px; color: var(--grey);
+/* Key results / citations */
+.avenue-results {
+  margin-top: 10px; padding-top: 10px;
+  border-top: 1px solid var(--border-light);
 }
+.avenue-results-label {
+  font-size: 10px; font-weight: 600; letter-spacing: 0.12em;
+  text-transform: uppercase; color: var(--grey); margin-bottom: 6px;
+}
+.result-row {
+  font-size: 12px; line-height: 1.6; color: var(--text); margin-bottom: 4px;
+}
+.cite-ref {
+  display: inline-block; cursor: pointer;
+  color: var(--accent); font-weight: 700; font-size: 11px;
+  position: relative;
+}
+.cite-ref:hover { text-decoration: underline; }
+.cite-popup {
+  display: none; position: absolute; bottom: calc(100% + 6px); left: 50%;
+  transform: translateX(-50%);
+  background: var(--dark); color: #fff; border-radius: var(--radius);
+  padding: 10px 14px; font-size: 11px; line-height: 1.5;
+  white-space: normal; width: 300px; z-index: 50;
+  box-shadow: 0 4px 16px rgba(0,0,0,0.25);
+  pointer-events: auto;
+}
+.cite-popup::after {
+  content: ''; position: absolute; top: 100%; left: 50%;
+  transform: translateX(-50%);
+  border: 6px solid transparent; border-top-color: var(--dark);
+}
+.cite-ref:hover .cite-popup,
+.cite-ref:focus .cite-popup { display: block; }
+.cite-popup a { color: #8b9cf7; text-decoration: underline; }
+.cite-popup a:hover { color: #fff; }
 
 .open-questions {
   margin-bottom: 28px; padding: 16px 20px;

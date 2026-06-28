@@ -153,16 +153,82 @@ function renderAvenueCard(avenue, isSelected) {
       <div class="avenue-name">${escHtml(avenue.name)}</div>
       <div class="avenue-desc">${escHtml(avenue.description)}</div>
       <div class="avenue-pillars">
-        ${pros.map(p => `<div class="avenue-pillar avenue-pro">✓ ${escHtml(p)}</div>`).join('')}
-        ${cons.map(c => `<div class="avenue-pillar avenue-con">✗ ${escHtml(c)}</div>`).join('')}
+        ${pros.map(p => renderPillar(p, 'pro')).join('')}
+        ${cons.map(c => renderPillar(c, 'con')).join('')}
       </div>
-      ${(avenue.trl || avenue.key_results) ? `
-      <div class="avenue-meta">
-        ${avenue.trl ? `<div class="avenue-meta-row"><strong>TRL:</strong> ${escHtml(avenue.trl)}</div>` : ''}
-        ${avenue.key_results ? `<div class="avenue-meta-row"><strong>Key results:</strong> ${escHtml(avenue.key_results)}</div>` : ''}
-      </div>` : ''}
+      ${renderTrlSlider(avenue)}
+      ${renderKeyResults(avenue)}
     </div>
   `;
+}
+
+function renderPillar(item, type) {
+  // Support both old (string) and new ({label, detail}) formats
+  if (typeof item === 'string') {
+    return `<div class="avenue-pillar avenue-${type}">
+      <span class="avenue-pillar-label">${type === 'pro' ? '✓' : '✗'} ${escHtml(item)}</span>
+    </div>`;
+  }
+  return `<div class="avenue-pillar avenue-${type}">
+    <span class="avenue-pillar-label">${type === 'pro' ? '✓' : '✗'} ${escHtml(item.label || '')}</span>
+    <span class="avenue-pillar-detail"> ${escHtml(item.detail || '')}</span>
+  </div>`;
+}
+
+function renderTrlSlider(avenue) {
+  let trlVal = avenue.trl_value;
+  if (trlVal == null && avenue.trl) {
+    // Parse from old string format like "TRL 5-6" or "TRL 3"
+    const m = String(avenue.trl).match(/(\d+)[\s–\-]*(\d+)?/);
+    if (m) trlVal = m[2] ? (parseInt(m[1]) + parseInt(m[2])) / 2 : parseInt(m[1]);
+  }
+  if (trlVal == null) return '';
+  trlVal = Math.max(1, Math.min(9, Number(trlVal)));
+  const pct = ((trlVal - 1) / 8 * 100).toFixed(1);
+  const justification = avenue.trl_justification || avenue.trl || '';
+
+  return `
+    <div class="trl-slider-wrap">
+      <div class="trl-slider-header">
+        <span class="trl-slider-label">Technology Readiness</span>
+        <span class="trl-slider-value">TRL ${trlVal % 1 === 0 ? trlVal : trlVal.toFixed(1)}</span>
+      </div>
+      <div class="trl-track"><div class="trl-fill" style="width:${pct}%"></div></div>
+      <div class="trl-markers">
+        ${[1,2,3,4,5,6,7,8,9].map(n => `<span class="trl-marker${n <= Math.round(trlVal) ? ' active' : ''}">${n}</span>`).join('')}
+      </div>
+      ${justification ? `<div class="trl-justification">${escHtml(justification)}</div>` : ''}
+    </div>
+  `;
+}
+
+function renderKeyResults(avenue) {
+  const results = avenue.key_results;
+  if (!results) return '';
+
+  // Support old string format
+  if (typeof results === 'string') {
+    return `<div class="avenue-results">
+      <div class="avenue-results-label">Key Results</div>
+      <div class="result-row">${escHtml(results)}</div>
+    </div>`;
+  }
+
+  // New array format with citations
+  if (!Array.isArray(results) || results.length === 0) return '';
+
+  return `<div class="avenue-results">
+    <div class="avenue-results-label">Key Results</div>
+    ${results.map((r, i) => {
+      const ref = i + 1;
+      const cite = r.citation || '';
+      const doi = r.doi && r.doi !== 'null' ? r.doi : '';
+      return `<div class="result-row">
+        ${escHtml(r.finding || '')}
+        <span class="cite-ref" tabindex="0">[${ref}]<span class="cite-popup">${escHtml(cite)}${doi ? `<br><a href="${escHtml(doi)}" target="_blank" rel="noopener">${escHtml(doi)}</a>` : ''}</span></span>
+      </div>`;
+    }).join('')}
+  </div>`;
 }
 
 function renderFollowUpChat(p) {

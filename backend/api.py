@@ -215,9 +215,10 @@ def create_app() -> FastAPI:
             raise HTTPException(500, f"Literature research failed: {exc}")
         logger.info(f"Literature research completed in {time.time()-t0:.1f}s")
 
+        project_name = report.get("title") or req.topic[:60] or "Untitled Project"
         db.table("projects").update({
             "topic": req.topic,
-            "name": req.topic[:60] if req.topic else "Untitled Project",
+            "name": project_name,
             "literature_report": report,
         }).eq("id", project_id).execute()
 

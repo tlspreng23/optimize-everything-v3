@@ -144,13 +144,14 @@ _LITERATURE_SYSTEM = (
 def literature_research(topic: str) -> dict:
     """
     Generate a structured literature report for the given research topic.
-    Returns a dict with 'field', 'summary', 'avenues', 'open_questions', 'recommendation'.
+    Returns a dict with 'title', 'field', 'summary', 'avenues', 'open_questions', 'recommendation'.
     """
     prompt = f"""The researcher wants to: {topic}
 
 Provide a structured literature review. Return ONLY valid JSON (no markdown fences, no extra text).
 
 {{
+  "title": "Short project title, 3–6 words (e.g. 'Direct Air Capture Adsorbent', 'Solar Cell Efficiency')",
   "field": "Research field name",
   "summary": "1 paragraph (4–6 sentences) overview of the current state and key challenges",
   "avenues": [
@@ -158,17 +159,30 @@ Provide a structured literature review. Return ONLY valid JSON (no markdown fenc
       "id": "short_id",
       "name": "Approach Name",
       "description": "1–2 sentence description",
-      "pros": ["advantage 1", "advantage 2"],
-      "cons": ["limitation 1", "limitation 2"],
-      "trl": "TRL level (1-9) with brief justification",
-      "key_results": "Best quantitative results (1 sentence)"
+      "pros": [
+        {{"label": "2–3 word label", "detail": "1 sentence explanation"}},
+        {{"label": "2–3 word label", "detail": "1 sentence explanation"}}
+      ],
+      "cons": [
+        {{"label": "2–3 word label", "detail": "1 sentence explanation"}},
+        {{"label": "2–3 word label", "detail": "1 sentence explanation"}}
+      ],
+      "trl_value": 5,
+      "trl_justification": "1 sentence justifying TRL level",
+      "key_results": [
+        {{"finding": "Key quantitative result (1 sentence)", "citation": "Author et al., Journal, Year", "doi": "https://doi.org/... or null if unknown"}}
+      ]
     }}
   ],
   "open_questions": ["question 1", "question 2", "question 3"],
   "recommendation": "Which avenue(s) are most promising and why (2 sentences)"
 }}
 
-Provide 3–5 avenues. Keep each field concise. Be specific with numbers where possible."""
+Rules:
+- trl_value must be a number 1–9 (use 5.5 for TRL 5–6 etc.)
+- Each avenue should have 2–3 pros and 1–2 cons
+- Each avenue should have 1–2 key_results with real citations
+- Provide 3–5 avenues. Keep each field concise."""
 
     return _call_json(_LITERATURE_SYSTEM, prompt, model=MODEL_FAST, max_tokens=4096)
 
