@@ -235,9 +235,24 @@ function bindSelector(id, onChange) {
    UTILITIES
    ================================================================ */
 
-function withLoading(fn, label = 'Loading…') {
+let _progressTimer = null;
+let _progressIndex = 0;
+
+function withLoading(fn, label = 'Loading…', progressSteps = null) {
   document.getElementById('loading-label').textContent = label;
   showLoading();
+  if (progressSteps && progressSteps.length > 0) {
+    _progressIndex = 0;
+    const labelEl = document.getElementById('loading-label');
+    _progressTimer = setInterval(() => {
+      _progressIndex = (_progressIndex + 1) % progressSteps.length;
+      labelEl.style.opacity = '0';
+      setTimeout(() => {
+        labelEl.textContent = progressSteps[_progressIndex];
+        labelEl.style.opacity = '1';
+      }, 250);
+    }, 3500);
+  }
   return fn().catch(err => {
     toast(err.message || 'Something went wrong.', 'error');
   }).finally(hideLoading);
@@ -249,6 +264,7 @@ function showLoading() {
 function hideLoading() {
   state.loading = false;
   document.getElementById('loading-overlay').classList.add('hidden');
+  if (_progressTimer) { clearInterval(_progressTimer); _progressTimer = null; }
 }
 
 let _toastTimer = null;

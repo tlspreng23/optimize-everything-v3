@@ -32,27 +32,51 @@ def _async():
 
 # ── JSON helper ───────────────────────────────────────────────────────────────
 
+def _strip_fences(text: str) -> str:
+    """Remove markdown code fences from a JSON response."""
+    text = text.strip()
+    if text.startswith("```"):
+        # Remove opening fence (```json or ```)
+        first_newline = text.find("\n")
+        if first_newline != -1:
+            text = text[first_newline + 1:]
+        # Remove closing fence
+        if text.rstrip().endswith("```"):
+            text = text.rstrip()[:-3]
+    return text.strip()
+
+
 def _call_json(
     system: str,
     prompt: str,
     model: str = "claude-opus-4-6",
     max_tokens: int = 2500,
+    _retries: int = 1,
 ) -> dict:
     """Call Claude and return parsed JSON. Strips markdown fences if present."""
-    message = _sync().messages.create(
-        model=model,
-        max_tokens=max_tokens,
-        system=system,
-        messages=[{"role": "user", "content": prompt}],
-    )
-    text = message.content[0].text.strip()
-    if text.startswith("```"):
-        parts = text.split("```", 2)
-        inner = parts[1]
-        if inner.startswith("json"):
-            inner = inner[4:]
-        text = inner.rsplit("```", 1)[0].strip()
-    return json.loads(text)
+    for attempt in range(_retries + 1):
+        cur_tokens = max_tokens if attempt == 0 else int(max_tokens * 1.5)
+        message = _sync().messages.create(
+            model=model,
+            max_tokens=cur_tokens,
+            system=system,
+            messages=[{"role": "user", "content": prompt}],
+        )
+        text = _strip_fences(message.content[0].text)
+
+        # Detect truncation — retry with more tokens
+        if message.stop_reason == "max_tokens" and attempt < _retries:
+            continue
+
+        try:
+            return json.loads(text)
+        except json.JSONDecodeError as exc:
+            if attempt < _retries:
+                continue
+            raise ValueError(
+                f"AI returned invalid JSON (stop_reason={message.stop_reason}). "
+                f"Parse error: {exc}"
+            )
 
 
 # ── Literature research ───────────────────────────────────────────────────────
@@ -100,7 +124,7 @@ Provide a comprehensive, structured literature review. Return ONLY valid JSON (n
 
 Provide 3–6 distinct avenues covering the main approaches. Be scientifically accurate and specific with numbers."""
 
-    return _call_json(_LITERATURE_SYSTEM, prompt, max_tokens=3500)
+    return _call_json(_LITERATURE_SYSTEM, prompt, max_tokens=6000, _retries=1)
 
 
 # ── Follow-up chat (streaming) ────────────────────────────────────────────────

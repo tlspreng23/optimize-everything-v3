@@ -161,7 +161,16 @@ function bindDiscovery(container) {
       const proj = await generateLiterature(state.projectId, topic);
       applyProject(proj);
       renderApp();
-    }, 'Researching literature…');
+    }, 'Searching scientific literature…', [
+      'Searching scientific literature…',
+      'Analysing research landscape…',
+      'Identifying key approaches…',
+      'Evaluating industrial relevance…',
+      'Comparing methodologies…',
+      'Assessing technology readiness…',
+      'Synthesising findings…',
+      'Structuring literature report…',
+    ]);
   });
 
   topicInput?.addEventListener('keydown', e => {
@@ -177,7 +186,13 @@ function bindDiscovery(container) {
         const proj = await selectAvenue(state.projectId, avenueId, avenueName);
         applyProject(proj);
         renderApp();
-      }, 'Generating study design…');
+      }, 'Analysing selected approach…', [
+        'Analysing selected approach…',
+        'Identifying key variables…',
+        'Defining optimisation objectives…',
+        'Estimating practical ranges…',
+        'Structuring experimental design…',
+      ]);
     });
   });
 

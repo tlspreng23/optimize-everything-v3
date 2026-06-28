@@ -107,7 +107,14 @@ function bindPaperPage(container) {
       applyProject(proj);
       state._editingPaperSection = null;
       renderApp();
-    }, 'Generating paper…');
+    }, 'Drafting paper…', [
+      'Drafting paper…',
+      'Writing abstract…',
+      'Composing introduction…',
+      'Summarising results…',
+      'Analysing discussion points…',
+      'Formulating conclusions…',
+    ]);
   });
 
   // Export paper as text
